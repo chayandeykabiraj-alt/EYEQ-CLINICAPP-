@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EYEQ EYE CARE MASTER</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Playfair+Display:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { 
+            --royal-blue: #0f172a; 
+            --primary-grey: #64748b; 
+            --border: #cbd5e1; 
+            --text: #1e293b; 
+            --wa-green: #25d366; 
+            --bg-slate: #f8fafc; 
+            --logo-w: 100px;
+            --logo-mt: 0px;
+            --logo-mr: 0px;
+        }
+        
+        @page { size: A4; margin: 4mm; } 
+        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 0; color: var(--text); background-color: var(--bg-slate); padding-bottom: 95px; text-transform: uppercase; }
+       .hidden { display: none!important; }
+       .print-only { display: none; } 
+       .lowercase-text { text-transform: lowercase !important; }
+
+        /* DASHBOARD */
+        header.dashboard-header { background: var(--royal-blue); color: white; padding: 15px 20px; border-bottom: 4px solid var(--primary-grey); display: flex; justify-content: space-between; align-items: center; }
+       .sync-status { font-size: 8px; font-weight: 800; color: #94a3b8; }
+       .sync-active { color: #4ade80; }
+       .dash-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px auto; max-width: 800px; padding: 0 15px; }
+       .dash-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+
+        /* A4 CONTAINER - ENLARGED FOR SCREEN EDITING */
+       .container { width: 100%; max-width: 900px; margin: 2mm auto; background: #fff; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; display: flex; flex-direction: column; }
+       .container::before { content: "EYEQ"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 150px; color: rgba(100, 116, 139, 0.03); font-family: 'Montserrat'; font-weight: 900; z-index: 0; pointer-events: none; }
+       
+       /* 1. HEADER (BOTTOM ALIGNED) */
+       .clinic-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--primary-grey); padding-bottom: 12px; margin-bottom: 15px; position: relative; z-index: 1; }
+       .left-head { width: 33%; text-align: left; color: var(--royal-blue); line-height: 1.3; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 2px; }
+       .center-head { width: 34%; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 2px; }
+       .right-head { width: 33%; text-align: right; color: var(--text); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; line-height: 1.3; padding-bottom: 2px; position: relative; }
+       
+       #clinic-logo-img { width: var(--logo-w, 100px); margin-top: var(--logo-mt, 0px); margin-right: var(--logo-mr, 0px); border-radius: 8px; cursor: pointer; object-fit: contain; margin-bottom: 6px; transition: all 0.2s; }
+
+       /* ENLARGED PATIENT INFO BAR FOR SCREEN */
+       .patient-bar { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 1.5fr 1.2fr 1fr; gap: 8px; align-items: center; background: #fdfbf7; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px; font-weight: 600; font-size: 12px; position: relative; z-index: 1; }
+       .patient-bar label { color: var(--primary-grey); margin-right: 4px; }
+       .patient-bar input, .patient-bar select { border: none; background: transparent; font-size: 12px; font-weight: 700; width: 100%; text-transform: uppercase; padding: 4px; }
+       .patient-bar input:focus { outline: none; border-bottom: 2px solid var(--primary-grey); }
+       .input-line { border-bottom: 1px dashed #ccc; display: flex; align-items: center; }
+
+       /* VERTICAL MAIN BODY */
+       .main-body { display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 1; flex-grow: 1; width: 100%; }
+       
+       .section-title { background: #f1f5f9; color: var(--text); padding: 6px 8px; font-size: 12px; font-weight: 800; border-left: 4px solid var(--primary-grey); margin-bottom: 5px; }
+       .section-title-rx { color: var(--text); font-size: 32px; font-family: 'Playfair Display', serif; font-weight: 900; margin-bottom: 5px; border-bottom: 2px solid var(--border); }
+
+        /* INPUTS & TABLES (ENLARGED FOR SCREEN) */
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; background: white; }
+        th { background: #fdfbf7; padding: 8px 4px; font-size: 10px; border: 1px solid var(--border); color: var(--text); font-weight: 800; text-align: center; }
+        td { border: 1px solid var(--border); padding: 0; text-align: center; font-size: 12px; }
+        
+        select { appearance: auto; -webkit-appearance: auto; text-align-last: center; border: none; font-size: 12px; width: 100%; padding: 8px; background: transparent; cursor: pointer; color: inherit; text-transform: uppercase; font-weight: bold; }
+        
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; text-transform: uppercase; background: #fff; font-family: inherit; box-sizing: border-box; font-weight: 600; }
+        textarea { resize: none; overflow: hidden; line-height: 1.5; }
+        
+       .rx-table input, .rx-table select { border: none!important; background: transparent; padding: 8px 4px; font-size: 12px; }
+       .inline-btn { background: var(--primary-grey); color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 9px; cursor: pointer; padding: 4px 8px; transition: 0.2s; }
+       .rx-inline-btn { background: #e2e8f0; color: var(--text); border: none; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; padding: 0 6px; margin-left: 4px; height: 26px; }
+
+       /* INLINE PRINT ROWS */
+       .print-row { font-size: 10px; line-height: 1.6; margin-bottom: 6px; }
+       .print-label { color: var(--text); font-weight: 800; text-decoration: underline; margin-right: 5px; font-size: 11px; }
+       .print-val { font-weight: 700; font-size: 10.5px; color: #000; }
+
+       /* FOOTER, NB, AND BARCODE */
+       .print-footer { margin-top: auto; border-top: 3px solid var(--primary-grey); background: var(--royal-blue); color: white; padding: 12px; display: grid; grid-template-columns: 1.2fr 2fr auto; gap: 10px; align-items: center; border-radius: 0 0 8px 8px; position: relative; z-index: 1; }
+       .footer-timing { font-size: 10px; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 10px; text-transform: uppercase; }
+       .footer-nb { font-size: 8px; line-height: 1.4; font-weight: 500; text-transform: none; }
+       .barcode-wrapper { background: white; padding: 4px; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
+       
+       .signature-box { text-align: center; font-weight: 800; font-size: 11px; color: var(--royal-blue); margin-top: 15px; border-top: 1px dashed var(--royal-blue); padding-top: 5px; width: 160px; display: inline-block; }
+
+        /* LOGO CONTROL PANEL */
+        .logo-controls { display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid var(--primary-grey); padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; width: 220px; text-align:left; font-family: 'Roboto', sans-serif; }
+        .logo-controls label { font-size: 9px; font-weight: bold; color: var(--text); display: block; margin-top: 8px; }
+        .logo-controls input[type="range"] { width: 100%; margin-bottom: 8px; }
+        .logo-controls button { background: var(--royal-blue); color: white; border: none; padding: 8px; font-size: 10px; font-weight: bold; width: 100%; border-radius: 4px; cursor: pointer; }
+        .editor-btn-float { position: absolute; top: 15px; right: 15px; z-index: 2000; background: var(--royal-blue); color: white; border: 1px solid var(--gold); padding: 8px 15px; border-radius: 5px; font-size: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        /* NAV & UTILS */
+       .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid var(--border); z-index: 1000; }
+       .nav-btn { background: none; border: none; font-weight: 800; color: #64748b; font-size: 10px; cursor: pointer; }
+       .plus-btn { background: var(--royal-blue); color: white; width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 30px; margin-top: -35px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; }
+
+       .lib-section { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+       .lib-list { max-height: 250px; overflow-y: auto; font-size: 10px; margin-top: 10px; border: 1px solid #eee; }
+       .lib-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+
+        /* SECURITY LOCK STYLES */
+        #auth-screen, #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--royal-blue); z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .auth-container, .lock-container { background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 320px; width: 90%; color: var(--royal-blue); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-top: 5px solid var(--primary-grey); }
+        .lock-input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid var(--border); border-radius: 6px; font-size: 14px; text-align: center; font-weight: bold; background: #fdfbf7; box-sizing: border-box; }
+        .pin-input { font-size: 18px; letter-spacing: 5px; }
+        .lock-btn { background: var(--royal-blue); color: white; width: 100%; border: none; padding: 12px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
+
+        /* HEADER EDITOR MODAL */
+        #header-editor-modal { display: none; position: fixed; top: 5%; left: 50%; transform: translateX(-50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 3000; width: 90%; max-width: 350px; max-height: 85vh; overflow-y: auto; border: 2px solid var(--royal-blue); }
+        .editor-group { margin-bottom: 15px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .editor-group h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--royal-blue); border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        .editor-group label { font-size: 9px; font-weight: bold; color: var(--text); display: block; margin-top: 8px; }
+        .editor-group input[type="range"] { width: 100%; }
+
+        /* =========================================
+           PRINT STYLES - STRICT 1-COLUMN A4
+           This shrinks everything down to fit perfectly!
+           ========================================= */
+        @media print {
+            .no-print, .bottom-nav, .dashboard-header, .dash-grid, #searchModal, #lock-screen, #auth-screen, .interactive-ui, .editor-btn-float { display: none !important; }
+            .print-only { display: block !important; }
+            
+            body { background-color: white !important; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            .container { 
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100%; max-width: 100%; margin: 0 !important; padding: 0 !important; border: none !important; box-shadow: none !important;
+                height: 285mm !important; 
+                position: relative !important;
+                overflow: hidden !important;
+            }
+            
+            .print-footer { position: absolute !important; bottom: 0 !important; left: 0 !important; width: 100% !important; box-sizing: border-box; padding: 8px 12px !important; }
+            
+            /* SHRINK FONTS FOR A4 FIT */
+            .clinic-header { padding-bottom: 8px !important; margin-bottom: 8px !important; }
+            #print_patient_bar { font-size: 10px !important; padding: 6px !important; margin-bottom: 12px !important; }
+            .print-row { font-size: 10px !important; margin-bottom: 6px !important; line-height: 1.5 !important; }
+            .print-label { font-size: 11px !important; }
+            .print-val { font-size: 10px !important; }
+            .section-title-rx { font-size: 26px !important; margin-bottom: 4px !important; }
+            #print_rx_list { font-size: 11px !important; }
+            table th { font-size: 8px !important; padding: 4px 2px !important; }
+            table td { font-size: 9px !important; padding: 0 !important; }
+            
+            /* Hide Dropdown Arrows on Print */
+            select { -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; background: transparent !important; border: none !important; color: black !important; padding: 0 !important; text-overflow: clip !important; font-weight: bold !important; font-size: 9px !important;}
+            select::-ms-expand { display: none !important; }
+            
+            input { border: none !important; background: transparent !important; padding: 0 !important; font-weight: bold !important; font-size: 9px !important;}
+            textarea { height: auto !important; overflow: visible !important; white-space: pre-wrap !important; word-wrap: break-word !important; border: none !important; resize: none !important; padding:0 !important; font-size: 9px !important;}
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            
+            .hide-on-print { display: none !important; }
+            .input-line { border-bottom: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div class="auth-container">
+        <h2 style="margin-top:0; font-family:'Playfair Display'; color:var(--royal-blue);">CLINIC LOGIN</h2>
+        <p style="font-size:10px; color:#64748b; text-transform:none;">Connect to your permanent database.</p>
+        <input type="email" id="login_email" class="lock-input lowercase-text" placeholder="Admin Email">
+        <input type="password" id="login_pass" class="lock-input" placeholder="Password">
+        <button class="lock-btn" onclick="window.loginToCloud()">SECURE LOGIN</button>
+    </div>
+</div>
+
+<div id="lock-screen" style="display: none;">
+    <div class="lock-container" id="lock-ui"></div>
+</div>
+
+<div id="datalist-hub">
+    <datalist id="dl_complaints"></datalist><datalist id="dl_sys_hist"></datalist><datalist id="dl_pat_hist"></datalist>
+    <datalist id="dl_lens_type"></datalist><datalist id="dl_lens_mat"></datalist><datalist id="dl_lens_coat"></datalist>
+    <datalist id="dl_clin_find"></datalist><datalist id="dl_diag_disease"></datalist>
+    <datalist id="dl_brands"></datalist><datalist id="dl_form"></datalist><datalist id="dl_compos"></datalist>
+    <datalist id="dl_freq"></datalist><datalist id="dl_dur"></datalist><datalist id="dl_advice"></datalist>
+</div>
+
+<div id="header-editor-modal" class="no-print">
+    <h3 style="margin-top:0; color:var(--royal-blue); text-align:center;">HEADER LAYOUT EDITOR</h3>
+    
+    <div class="editor-group">
+        <h4>CONSULTANT (LEFT SIDE)</h4>
+        <label>SIZE</label> <input type="range" id="ctrl_cons_sz" min="0.5" max="2" step="0.05" oninput="window.applyLiveHeaderStyles()">
+        <label>LEFT / RIGHT SHIFT</label> <input type="range" id="ctrl_cons_x" min="-150" max="150" oninput="window.applyLiveHeaderStyles()">
+        <label>UP / DOWN SHIFT</label> <input type="range" id="ctrl_cons_y" min="-100" max="100" oninput="window.applyLiveHeaderStyles()">
+    </div>
+
+    <div class="editor-group">
+        <h4>CLINIC TITLE (CENTER)</h4>
+        <label>SIZE</label> <input type="range" id="ctrl_title_sz" min="0.5" max="2" step="0.05" oninput="window.applyLiveHeaderStyles()">
+        <label>LEFT / RIGHT SHIFT</label> <input type="range" id="ctrl_title_x" min="-150" max="150" oninput="window.applyLiveHeaderStyles()">
+        <label>UP / DOWN SHIFT</label> <input type="range" id="ctrl_title_y" min="-100" max="100" oninput="window.applyLiveHeaderStyles()">
+    </div>
+
+    <div class="editor-group">
+        <h4>LOGO (RIGHT SIDE)</h4>
+        <label>LOGO WIDTH</label> <input type="range" id="ctrl_logo_w" min="30" max="250" oninput="window.applyLiveHeaderStyles()">
+        <label>LEFT / RIGHT SHIFT</label> <input type="range" id="ctrl_logo_x" min="-150" max="150" oninput="window.applyLiveHeaderStyles()">
+        <label>UP / DOWN SHIFT</label> <input type="range" id="ctrl_logo_y" min="-100" max="100" oninput="window.applyLiveHeaderStyles()">
+    </div>
+
+    <div class="editor-group">
+        <h4>ADDRESS (RIGHT SIDE)</h4>
+        <label>SIZE</label> <input type="range" id="ctrl_add_sz" min="0.5" max="2" step="0.05" oninput="window.applyLiveHeaderStyles()">
+        <label>LEFT / RIGHT SHIFT</label> <input type="range" id="ctrl_add_x" min="-150" max="150" oninput="window.applyLiveHeaderStyles()">
+        <label>UP / DOWN SHIFT</label> <input type="range" id="ctrl_add_y" min="-100" max="100" oninput="window.applyLiveHeaderStyles()">
+    </div>
+
+    <div style="display:flex; gap:10px;">
+        <button onclick="window.resetHeaderStyles()" style="flex:1; background:#ef4444; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold;">RESET ALL</button>
+        <button onclick="window.saveAndCloseHeaderEditor()" style="flex:1; background:var(--royal-blue); color:white; border:none; padding:10px; border-radius:4px; font-weight:bold;">SAVE & CLOSE</button>
+    </div>
+</div>
+
+<div id="view-home" class="hidden">
+    <header class="dashboard-header no-print">
+        <div style="font-family:'Montserrat'; font-weight:800; font-size:14px;">EYEQ MASTER</div>
+        <div id="sync-icon" class="sync-status">🔴 OFFLINE</div>
+    </header>
+    <div class="dash-grid no-print">
+        <div class="dash-card" onclick="window.startNewPatient()"><b>NEW RX</b></div>
+        <div class="dash-card" onclick="window.openSearch()"><b>RECORDS</b></div>
+        <div class="dash-card" onclick="window.showView('view-library')"><b>LIBRARY</b></div>
+    </div>
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 15px;">
+        <div style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 10px;">RECENT ACTIVITY</div>
+        <div id="recent-list"></div>
+    </div>
+</div>
+
+<div id="view-library" class="hidden no-print" style="max-width:800px; margin:20px auto; padding:0 15px;">
+    <button onclick="window.showView('view-home')" style="margin-bottom:15px; background:var(--royal-blue); color:white; border:none; padding:10px; border-radius:8px; font-weight:800; cursor:pointer;">⬅ BACK</button>
+    <div class="lib-section">
+        <label style="font-size:12px; font-weight:bold; color:var(--text);">MANAGE MEDICAL DATABASE</label>
+        
+        <p id="lib_hint_text" style="font-size:10px; color:#666; margin-top:4px; text-transform:none;">
+            <b>Bulk Data Import:</b> Upload a .CSV or .TXT file to instantly populate the category below.
+        </p>
+        
+        <div style="background:#f8fafc; padding:12px; border-radius:5px; border:1px dashed var(--primary-grey); margin-top:10px;">
+            <input type="file" id="lib_file_upload" accept=".csv, .txt, .pdf, .jpg, .jpeg, .png" style="font-size:10px;" onchange="window.handleLibFileUpload(this)">
+        </div>
+
+        <select id="lib_cat" class="has-arrow" onchange="window.toggleLibInputArea(); window.renderLibrary();" style="border: 1px solid var(--border); background: #fff; margin:15px 0; padding:12px; border-radius:5px; font-size:11px;">
+            <option value="dl_consultant">CONSULTANTS (SMART PROFILE)</option>
+            <option value="dl_brands">BRAND NAMES (LINKED COMPOSITION)</option>
+            <option value="dl_complaints">CHIEF COMPLAINTS</option>
+            <option value="dl_sys_hist">SYSTEMIC HISTORY</option>
+            <option value="dl_pat_hist">PATIENT HISTORY</option>
+            <option value="dl_lens_type">LENS TYPES</option>
+            <option value="dl_lens_mat">LENS MATERIALS</option>
+            <option value="dl_lens_coat">LENS COATINGS</option>
+            <option value="dl_clin_find">CLINICAL FINDINGS</option>
+            <option value="dl_diag_disease">DIAGNOSIS / DISEASES</option>
+            <option value="dl_form">DOSAGE FORMS</option>
+            <option value="dl_compos">COMPOSITIONS</option>
+            <option value="dl_freq">FREQUENCIES / TAPERING</option>
+            <option value="dl_dur">DURATIONS</option>
+            <option value="dl_advice">ADVICE SECTION</option>
+        </select>
+        
+        <div id="standard_lib_input_area" style="display:none; gap:5px;">
+            <input type="text" id="lib_input" placeholder="ADD ITEM MANUALLY..." style="padding:10px; font-size:11px;">
+            <button onclick="window.manualAddLib()" style="width:90px; background:var(--primary-grey); color:white; border:none; border-radius:4px; font-weight:800; cursor:pointer;">SAVE</button>
+        </div>
+        
+        <div id="consultant_lib_input_area" style="display:flex; flex-direction:column; gap:8px;">
+            <input type="text" id="lib_cons_name" placeholder="CONSULTANT NAME (e.g. CHAYAN DEY KABIRAJ)" style="padding:10px; font-size:11px;">
+            <input type="text" id="lib_cons_deg" placeholder="DESIGNATION (e.g. CONSULTANT OPTOMETRIST)" style="padding:10px; font-size:11px;">
+            <input type="text" id="lib_cons_degrees" placeholder="DEGREES (e.g. BSc. Optom)" style="padding:10px; font-size:11px;">
+            
+            <div id="extra_lines_container" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <button type="button" onclick="window.addExtraConsLine()" style="background:var(--primary-grey); color:white; border:none; padding:8px; font-size:9px; border-radius:3px; cursor:pointer; width:150px; font-weight:bold;">+ ADD EXTRA LINE</button>
+
+            <input type="text" id="lib_cons_phone" placeholder="CONTACT NUMBER" style="padding:10px; font-size:11px; margin-top:5px;">
+            <input type="text" id="lib_cons_time" placeholder="TIMINGS (e.g. 10:00 AM - 08:00 PM)" style="padding:10px; font-size:11px;">
+            <button onclick="window.addConsultantToLib()" style="background:var(--royal-blue); color:white; border:none; border-radius:4px; font-weight:800; padding:12px; cursor:pointer; margin-top:5px; font-size:12px;">SAVE CONSULTANT PROFILE</button>
+        </div>
+
+        <div id="lib_display" class="lib-list" style="max-height: 350px;"></div>
+    </div>
+</div>
+
+<div class="modal-overlay no-print" id="searchModal" onclick="if(event.target==this) window.closeSearch()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+    <div style="background:white; width:90%; max-width:400px; padding:20px; border-radius:12px;">
+        <h3 style="margin-top:0; color:var(--royal-blue);">ARCHIVES</h3>
+        <input type="text" id="universal_search" onkeyup="window.handleSearchKey(event)" placeholder="NAME, MRD, PHONE, OR SCAN BARCODE...">
+        <div id="res_box" style="max-height:350px; overflow-y:auto; margin-top:10px; text-transform:uppercase;"></div>
+    </div>
+</div>
+
+<div id="view-presc" class="hidden">
+    
+    <button class="editor-btn-float no-print" onclick="window.openHeaderEditor()">⚙️ EDIT HEADER LAYOUT</button>
+
+    <div class="container">
+        
+        <header class="clinic-header">
+            <div class="left-head">
+                <div class="cons-wrapper">
+                    <strong id="head_doc_name" style="font-size:16px; color:var(--royal-blue); font-weight:900;">CHAYAN DEY KABIRAJ</strong><br>
+                    <strong id="head_doc_deg" style="font-size:11px; margin-top:2px; display:inline-block; color:var(--primary-grey);">CONSULTANT OPTOMETRIST</strong><br>
+                    <span id="head_doc_degrees" style="font-size:9px; font-weight:bold; color:var(--royal-blue); display:none; margin-top:2px;"></span>
+                    <span id="head_doc_extra_1" style="font-size:8.5px; color:var(--text); font-weight:600; display:none; margin-top:2px;"></span>
+                    <span id="head_doc_extra_2" style="font-size:8.5px; color:var(--text); font-weight:600; display:none; margin-top:2px;"></span>
+                    <span id="head_doc_extra_3" style="font-size:8.5px; color:var(--text); font-weight:600; display:none; margin-top:2px;"></span>
+                </div>
+            </div>
+            
+            <div class="center-head">
+                <div class="title-wrapper">
+                    <div style="white-space: nowrap; font-family:'Playfair Display', serif; margin-bottom: 2px;">
+                        <strong style="color:var(--royal-blue); font-size:28px; font-weight:900;">EYEQ EYE CARE</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-head">
+                <div style="position:relative; display:flex; flex-direction:column; align-items:flex-end; width:100%;">
+                    <div id="logo-container" title="Click to upload & adjust logo" style="position:relative; z-index:10; margin-bottom:2px;">
+                        <input type="file" id="logo-upload" accept="image/*" style="display:none;" onchange="saveLogo(this)">
+                        <img id="clinic-logo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><circle cx='40' cy='40' r='38' fill='none' stroke='%2364748b' stroke-width='2'/><text x='40' y='45' font-family='sans-serif' font-size='11' font-weight='bold' text-anchor='middle' fill='%2364748b'>ADD LOGO</text></svg>" onclick="window.toggleLogoControls()">
+                    </div>
+                    <div id="logo-controls" class="logo-controls no-print">
+                        <button onclick="document.getElementById('logo-upload').click()">UPLOAD NEW LOGO</button>
+                        <label>SIZE</label> <input type="range" min="30" max="250" id="logo_w" oninput="window.updateLogoStyle()">
+                        <label>SHIFT UP / DOWN</label> <input type="range" min="-100" max="100" id="logo_y" oninput="window.updateLogoStyle()">
+                        <label>SHIFT LEFT / RIGHT</label> <input type="range" min="-100" max="100" id="logo_x" oninput="window.updateLogoStyle()">
+                    </div>
+                </div>
+                <div class="address-wrapper">
+                    <span style="font-size:10px; font-weight:800; color:var(--royal-blue);">GOBINDAPUR-BISHALAKSHMITALA</span>
+                    <span style="font-size:9px; font-weight:700; color:var(--royal-blue);">SINGUR, HOOGHLY - 712223</span>
+                    <span style="font-size:7.5px; margin-top:2px; color:var(--text);"><strong>CONTACTS:</strong> 7980931569 / 6297785968</span>
+                    <span style="font-size:7.5px; color:var(--text);"><strong>EMAIL ID:</strong> <span class="lowercase-text" style="font-weight:bold;">chayandeykabiraj@gmail.com</span></span>
+                </div>
+            </div>
+        </header>
+
+        <div id="visit_history_container" class="no-print" style="display:none; padding:8px; background:#fdfbf7; border:1px solid var(--primary-grey); margin-bottom:10px; border-radius:4px; font-size:9px;"></div>
+
+        <div class="patient-bar interactive-ui">
+            <div style="display:flex;"><label>NAME:</label><div class="input-line" style="flex:1;"><input type="text" id="pt_name"></div></div>
+            <div style="display:flex;"><label>AGE:</label><div class="input-line" style="flex:1;"><input type="number" inputmode="numeric" pattern="\d*" id="pt_age" style="width:100%; text-align:center;"></div></div>
+            <div style="display:flex;"><label>SEX:</label><div class="input-line" style="flex:1;"><select id="pt_sex" class="has-arrow" style="padding:0; width:100%;"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select></div></div>
+            <div style="display:flex; align-items:center;"><label>DATE:</label>
+                <div class="input-line" style="flex:1; display:flex;">
+                    <input type="text" id="dt_now" style="flex:1; padding-right:0;">
+                    <input type="datetime-local" class="no-print" style="width:20px; border:none; background:transparent;" onchange="if(this.value){ let d = new Date(this.value); document.getElementById('dt_now').value = d.toLocaleDateString('en-IN') + ', ' + d.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'}); }">
+                </div>
+            </div>
+            <div style="display:flex;"><label>CONTACT:</label><div class="input-line" style="flex:1;"><input type="number" id="pt_phone"></div></div>
+            <div style="display:flex;"><label>MRD:</label><div class="input-line" style="flex:1;"><input type="text" id="mrd_no" readonly style="color:var(--text); font-weight:800;"></div></div>
+        </div>
+
+        <div id="print_patient_bar" class="print-only" style="font-size: 10px; font-weight: 700; border: 1px solid var(--border); padding: 6px; border-radius: 4px; margin-bottom: 12px; background: #fdfbf7;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr; gap: 5px;">
+                <div><span style="color:var(--text);">NAME:</span> <span id="p_pt_name"></span></div>
+                <div><span style="color:var(--text);">AGE/SEX:</span> <span id="p_pt_age_sex"></span></div>
+                <div><span style="color:var(--text);">DATE:</span> <span id="p_dt_now"></span></div>
+                <div><span style="color:var(--text);">CONTACT:</span> <span id="p_pt_phone"></span></div>
+                <div><span style="color:var(--text);">MRD:</span> <span id="p_mrd_no" style="font-weight:800;"></span></div>
+            </div>
+        </div>
+
+        <div class="main-body">
+            
+            <div id="sec-cc" class="hideable-section">
+                <div class="interactive-ui">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                        <label class="section-title" style="margin:0;">PRESENT COMPLAIN</label>
+                        <div class="no-print" style="display: flex; gap: 2px;">
+                            <input type="text" id="cc_input" list="dl_complaints" placeholder="Add..." style="width: 100px; padding: 4px; font-size: 8px;">
+                            <button type="button" onclick="window.addMulti('cc_input', 'cc_final', 'dl_complaints')" class="inline-btn">+ ADD</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 6px; margin-top:4px;">
+                        <select id="cc_eye" class="has-arrow no-print" style="width: 60px; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="">EYE</option><option value="RE">RE</option><option value="LE">LE</option><option value="BE">BE</option>
+                        </select>
+                        <textarea id="cc_final" oninput="autoResize(this)" style="flex: 1; height: 35px;"></textarea>
+                    </div>
+                </div>
+                <div id="p_cc_box" class="print-only print-row"><span class="print-label">PRESENT COMPLAIN:</span> <span id="p_cc_val" class="print-val"></span></div>
+            </div>
+
+            <div id="sec-pat" class="hideable-section">
+                <div class="interactive-ui">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                        <label class="section-title" style="margin:0;">PAST HISTORY</label>
+                        <div class="no-print" style="display: flex; gap: 2px;">
+                            <input type="text" id="pat_hist_input" list="dl_pat_hist" placeholder="Add..." style="width: 100px; padding: 4px; font-size: 8px;">
+                            <button type="button" onclick="window.addMulti('pat_hist_input', 'pat_hist_final', 'dl_pat_hist')" class="inline-btn">+ ADD</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 6px; margin-top:4px;">
+                        <select id="pat_eye" class="has-arrow no-print" style="width: 60px; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="">EYE</option><option value="RE">RE</option><option value="LE">LE</option><option value="BE">BE</option>
+                        </select>
+                        <textarea id="pat_hist_final" oninput="autoResize(this)" style="flex: 1; height: 30px;"></textarea>
+                    </div>
+                </div>
+                <div id="p_pat_box" class="print-only print-row"><span class="print-label">PAST HISTORY:</span> <span id="p_pat_val" class="print-val"></span></div>
+            </div>
+
+            <div id="sec-sys" class="hideable-section">
+                <div class="interactive-ui">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                        <label class="section-title" style="margin:0;">GENERAL CONDITION</label>
+                        <div class="no-print" style="display: flex; gap: 2px;">
+                            <input type="text" id="sys_hist_input" list="dl_sys_hist" placeholder="Add..." style="width: 100px; padding: 4px; font-size: 8px;">
+                            <button type="button" onclick="window.addMulti('sys_hist_input', 'sys_hist_final', 'dl_sys_hist')" class="inline-btn">+ ADD</button>
+                        </div>
+                    </div>
+                    <textarea id="sys_hist_final" oninput="autoResize(this)" style="width: 100%; height: 30px; margin-top:4px;"></textarea>
+                </div>
+                <div id="p_sys_box" class="print-only print-row"><span class="print-label">GENERAL CONDITION:</span> <span id="p_sys_val" class="print-val"></span></div>
+            </div>
+
+            <div id="sec-refract" class="hideable-section">
+                <div class="section-title" style="margin-top:0;">VISUAL ACUITY & REFRACTION</div>
+                <table>
+                    <tr><th style="width:30px;">EYE</th><th>UAVN</th><th>AVN</th><th>PHVN</th><th>SPH</th><th>CYL</th><th style="width:45px;">AX</th><th>BCVN</th><th>N.ADD</th><th>N.V</th></tr>
+                    <tr>
+                        <td><strong>RE</strong></td>
+                        <td><select class="va_d has-arrow"></select></td><td><select class="va_d has-arrow"></select></td><td><select class="va_d has-arrow"></select></td>
+                        <td><select class="sph_d has-arrow"></select></td><td><select class="cyl_d has-arrow"></select></td><td><select class="ax_d has-arrow"></select></td>
+                        <td><select class="va_d has-arrow"></select></td><td><select class="nadd_d has-arrow"></select></td><td><select class="nv_d has-arrow"></select></td>
+                    </tr>
+                    <tr>
+                        <td><strong>LE</strong></td>
+                        <td><select class="va_d has-arrow"></select></td><td><select class="va_d has-arrow"></select></td><td><select class="va_d has-arrow"></select></td>
+                        <td><select class="sph_d has-arrow"></select></td><td><select class="cyl_d has-arrow"></select></td><td><select class="ax_d has-arrow"></select></td>
+                        <td><select class="va_d has-arrow"></select></td><td><select class="nadd_d has-arrow"></select></td><td><select class="nv_d has-arrow"></select></td>
+                    </tr>
+                </table>
+
+                <div id="interactive_lens_sec" class="interactive-ui" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; background:#fdfbf7; padding:10px; border:1px solid var(--border); border-radius:4px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size: 10px; font-weight: bold; color: var(--text);">LENS TYPE</label>
+                            <div class="no-print" style="display:flex; gap:2px;">
+                                <input type="text" id="lens_type_input" list="dl_lens_type" style="width:60px; font-size:8px; padding:4px;">
+                                <button type="button" class="inline-btn" onclick="window.addMultiComma('lens_type_input', 'lens_type', 'dl_lens_type')">+</button>
+                            </div>
+                        </div>
+                        <input type="text" id="lens_type" placeholder="TYPE">
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size: 10px; font-weight: bold; color: var(--text);">MATERIAL</label>
+                            <div class="no-print" style="display:flex; gap:2px;">
+                                <input type="text" id="lens_mat_input" list="dl_lens_mat" style="width:60px; font-size:8px; padding:4px;">
+                                <button type="button" class="inline-btn" onclick="window.addMultiComma('lens_mat_input', 'lens_mat', 'dl_lens_mat')">+</button>
+                            </div>
+                        </div>
+                        <input type="text" id="lens_mat" placeholder="MATERIAL">
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size: 10px; font-weight: bold; color: var(--text);">COATING</label>
+                            <div class="no-print" style="display:flex; gap:2px;">
+                                <input type="text" id="lens_coat_input" list="dl_lens_coat" style="width:60px; font-size:8px; padding:4px;">
+                                <button type="button" class="inline-btn" onclick="window.addMultiComma('lens_coat_input', 'lens_coat', 'dl_lens_coat')">+</button>
+                            </div>
+                        </div>
+                        <input type="text" id="lens_coat" placeholder="COATING">
+                    </div>
+                </div>
+                
+                <div id="p_lens_box" class="print-only print-row" style="margin-top:6px;"></div>
+            </div>
+
+            <div id="sec-find" class="interactive-ui">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label class="section-title" style="margin:0;">CLINICAL FINDINGS & IOP (RECORDS) :</label>
+                    <div style="font-family:'Roboto'; font-size:10px; display:flex; align-items:center; gap:6px;">
+                        <select id="iop_method" class="has-arrow" style="width:80px; border: 1px solid var(--border);"><option>NCT</option><option>GAT</option><option>SCHIOTZ</option></select>
+                        <input type="text" id="iop_od" placeholder="RE (mmHg)" style="width:80px; font-weight:bold;">
+                        <input type="text" id="iop_os" placeholder="LE (mmHg)" style="width:80px; font-weight:bold;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:4px;">
+                    <div>
+                        <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom:4px;">
+                            <span style="font-size:10px; font-weight:bold; color:var(--text);">RE FINDINGS</span>
+                            <div style="display:flex; gap:2px;">
+                                <input type="text" id="od_f_input" list="dl_clin_find" style="width: 100px; padding: 4px; font-size: 8px;">
+                                <button type="button" onclick="window.addMulti('od_f_input', 'od_f', 'dl_clin_find')" class="inline-btn">+</button>
+                            </div>
+                        </div>
+                        <textarea id="od_f" oninput="autoResize(this)" style="height:50px;"></textarea>
+                    </div>
+                    <div>
+                        <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom:4px;">
+                            <span style="font-size:10px; font-weight:bold; color:var(--text);">LE FINDINGS</span>
+                            <div style="display:flex; gap:2px;">
+                                <input type="text" id="os_f_input" list="dl_clin_find" style="width: 100px; padding: 4px; font-size: 8px;">
+                                <button type="button" onclick="window.addMulti('os_f_input', 'os_f', 'dl_clin_find')" class="inline-btn">+</button>
+                            </div>
+                        </div>
+                        <textarea id="os_f" oninput="autoResize(this)" style="height:50px;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-diag" class="hideable-section">
+                <div class="interactive-ui">
+                    <label class="section-title" style="margin:0;">DIAGNOSIS</label>
+                    <div class="no-print" style="display: flex; gap: 6px; align-items: center; background: #fdfbf7; padding: 8px; border: 1px dashed var(--primary-grey); border-radius: 4px; margin: 6px 0;">
+                        <select id="diag_eye_build" class="has-arrow" style="width: 70px; border: 1px solid var(--border); padding:6px; font-size:10px;"><option value="RE">RE</option><option value="LE">LE</option><option value="BE">BE</option></select>
+                        <input type="text" id="diag_disease_build" list="dl_diag_disease" placeholder="SELECT DISEASE" style="flex: 1; padding:6px; font-size:10px;">
+                        <button type="button" onclick="window.buildDiagnosis()" class="inline-btn" style="padding:6px 12px; font-size:10px;">+ ADD</button>
+                    </div>
+                    <textarea id="diag_final_text" oninput="autoResize(this)" style="width: 100%; height: 50px; font-weight:700;"></textarea>
+                </div>
+                <div id="p_diag_box" class="print-only print-row"><span class="print-label">DIAGNOSIS:</span> <span id="p_diag_val" class="print-val" style="font-size:11px;"></span></div>
+            </div>
+
+            <div id="sec-rx" class="hideable-section">
+                <div class="section-title-rx">Rx</div>
+                <div class="interactive-ui">
+                    <table class="rx-table" style="margin-top:0;">
+                        <thead><tr><th style="width:45px;">EYE</th><th style="width:60px;">FORM</th><th>BRAND</th><th>COMPOSITION</th><th style="width:110px;">FREQ / DOSAGE</th><th style="width:90px;">DUR</th><th class="no-print" style="width:35px;"></th></tr></thead>
+                        <tbody id="rx_body"></tbody>
+                    </table>
+                    <button class="no-print" onclick="window.addRxRow()" style="background:none; border:1px dashed var(--primary-grey); padding:10px; width:100%; margin-top:8px; cursor:pointer; font-weight:800; font-size:12px;">+ MEDICINE</button>
+                </div>
+                <div id="print_rx_list" class="print-only" style="margin-top: 8px; font-size: 11px; padding-left: 8px;"></div>
+            </div>
+
+            <div id="sec-adv" class="hideable-section">
+                <div class="interactive-ui">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                        <label class="section-title" style="margin:0;">ADVICE / INSTRUCTIONS</label>
+                        <div class="no-print" style="display: flex; gap: 2px;">
+                            <input type="text" id="advice_input" list="dl_advice" placeholder="Add..." style="width: 100px; padding: 4px; font-size: 8px;">
+                            <button type="button" onclick="window.addMulti('advice_input', 'advice_text', 'dl_advice')" class="inline-btn">+ ADD</button>
+                        </div>
+                    </div>
+                    <textarea id="advice_text" oninput="autoResize(this)" style="height:50px; margin-top:4px;"></textarea>
+                </div>
+                <div id="p_adv_box" class="print-only print-row" style="margin-top:10px;"><span class="print-label">ADVICE / INSTRUCTIONS:</span> <span id="p_adv_val" class="print-val"></span></div>
+            </div>
+
+            <div id="sec-fu" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; align-items: end;">
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: var(--text); border-bottom:1px solid var(--primary-grey);">FOLLOW UP</label>
+                    <div class="interactive-ui" style="display:flex; gap:8px; margin-top:8px;">
+                        <input type="text" id="fu_remarks" placeholder="REMARKS" style="flex:1;">
+                        <div style="display:flex; align-items:center; border: 1px solid var(--border); border-radius:4px; background:#fff; padding-right:4px;">
+                            <input type="text" id="fu_date_txt" placeholder="DATE" style="width:80px; border:none;">
+                            <input type="date" class="no-print" style="width:30px; border:none; background:transparent;" onchange="document.getElementById('fu_date_txt').value = this.value.split('-').reverse().join('/')">
+                        </div>
+                    </div>
+                    <div class="print-only" style="margin-top: 6px; font-size: 11px; font-weight: bold;">
+                        <span id="p_fu_date" style="color:red; margin-right:10px;"></span> <span id="p_fu_remarks"></span>
+                    </div>
+                </div>
+                
+                <div style="text-align: right; display:flex; flex-direction: column; align-items: flex-end;">
+                    
+                    <div class="interactive-ui no-print" style="width: 100%; max-width: 300px;">
+                        <label style="font-size: 11px; font-weight: bold; color: var(--text); border-bottom:1px solid var(--primary-grey); margin-bottom:8px; display:block;">SELECT CONSULTANT</label>
+                        <select id="consultant_box" class="has-arrow" style="text-align: right; font-weight:bold; font-size:12px; padding:8px; border:1px solid var(--gold); width:100%; appearance:auto;">
+                            <option value="CHAYAN DEY KABIRAJ | CONSULTANT OPTOMETRIST | | | 7980931569 | 10:00 AM - 08:00 PM">CHAYAN DEY KABIRAJ</option>
+                        </select>
+                        
+                        <label style="font-size: 10px; font-weight: bold; color: var(--primary-grey); margin-top:8px; display:block;">EDIT TIMINGS</label>
+                        <input type="text" id="timing_input" value="10:00 AM - 08:00 PM" style="text-align: right; font-weight:bold; font-size:10px; padding:6px; width:100%;">
+                    </div>
+                    
+                    <div class="print-only" style="margin-top: 30px;" id="print_consultant">
+                        <div style="display:inline-block; border-top:1px dashed var(--royal-blue); width:160px; padding-top:4px; font-size:10px; font-weight:800; color:var(--royal-blue); text-align:center;">SIGNATURE<br><span style='font-size:8px; font-weight:600; color:var(--text);' id="print_cons_name_only">OPTOM. CHAYAN DEY KABIRAJ</span></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div> <footer class="print-footer">
+            <div class="footer-timing">
+                <span>TIMINGS: <span id="footer_timing_text">10:00 AM - 08:00 PM</span></span>
+            </div>
+            <div class="footer-nb">
+                N.B : Immediately Consult with Eye Hospital in case of CORNEA, OCULOPLASTY, GLAUCOMA, PAEDIATRIC OPHTHALMOLOGY, RETINA for detail analysis and proper management.<br>
+                <span style="font-weight:bold;">***This prescription is not valid for any medico legal cases</span>
+            </div>
+            <div class="barcode-wrapper print-only">
+                <svg id="barcode-svg"></svg>
+            </div>
+        </footer>
+
+        <div class="no-print" style="margin-top:30px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+            <button type="button" onclick="window.saveAndPrint()" style="background:var(--royal-blue); color:white; border:none; padding:15px; border-radius:50px; font-weight:800; font-size:14px; cursor:pointer;">SAVE & PRINT Rx</button>
+            <button type="button" onclick="window.sendWhatsApp()" style="background:var(--wa-green); color:white; border:none; padding:15px; border-radius:50px; font-weight:800; font-size:14px; cursor:pointer;">WHATSAPP</button>
+            <button type="button" onclick="window.startFollowUp()" style="background:var(--primary-grey); color:white; border:none; padding:15px; border-radius:50px; font-weight:800; font-size:14px; cursor:pointer;">NEW VISIT</button>
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav no-print">
+    <button class="nav-btn" onclick="window.showView('view-home')">HOME</button>
+    <button class="plus-btn" onclick="window.startNewPatient()">+</button>
+    <button class="nav-btn" onclick="window.showView('view-library')">LIBRARY</button>
+</nav>
+
+<script>
+    window.appSecurityPin = null;
+    window.currentOtp = null;
+    window.ADMIN_EMAIL = "chayandeykabiraj@gmail.com"; 
+    
+    let db = null;
+    let auth = null;
+    let userId = null;
+    let rxCounter = 0;
+    
+    const dbFolder = "eyeq-master"; 
+
+    // --- LOGO UPLOADER SYSTEM ---
+    window.onload = function() {
+        window.loadHeaderStylesToUI();
+        const savedLogo = localStorage.getItem('eyeq_clinic_logo');
+        if(savedLogo) { document.getElementById('clinic-logo-img').src = savedLogo; }
+        window.toggleLibInputArea(); 
+    };
+
+    window.saveLogo = function(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('clinic-logo-img').src = e.target.result;
+                localStorage.setItem('eyeq_clinic_logo', e.target.result);
+                window.showToast("Logo Saved!");
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+    
+    // --- ADVANCED HEADER LAYOUT EDITOR ---
+    window.openHeaderEditor = function() {
+        let modal = document.getElementById('header-editor-modal');
+        modal.style.display = 'block';
+        window.loadHeaderStylesToUI();
+    };
+    
+    window.saveAndCloseHeaderEditor = function() {
+        document.getElementById('header-editor-modal').style.display = 'none';
+        window.showToast("Header Layout Saved!");
+    };
+    
+    window.applyLiveHeaderStyles = function() {
+        let styles = {
+            cons_sz: document.getElementById('ctrl_cons_sz').value,
+            cons_x: document.getElementById('ctrl_cons_x').value,
+            cons_y: document.getElementById('ctrl_cons_y').value,
+            title_sz: document.getElementById('ctrl_title_sz').value,
+            title_x: document.getElementById('ctrl_title_x').value,
+            title_y: document.getElementById('ctrl_title_y').value,
+            logo_w: document.getElementById('ctrl_logo_w').value,
+            logo_x: document.getElementById('ctrl_logo_x').value,
+            logo_y: document.getElementById('ctrl_logo_y').value,
+            add_sz: document.getElementById('ctrl_add_sz').value,
+            add_x: document.getElementById('ctrl_add_x').value,
+            add_y: document.getElementById('ctrl_add_y').value
+        };
+        
+        let root = document.documentElement;
+        root.style.setProperty('--cons-scale', styles.cons_sz);
+        root.style.setProperty('--cons-x', styles.cons_x + 'px');
+        root.style.setProperty('--cons-y', styles.cons_y + 'px');
+        
+        root.style.setProperty('--title-scale', styles.title_sz);
+        root.style.setProperty('--title-x', styles.title_x + 'px');
+        root.style.setProperty('--title-y', styles.title_y + 'px');
+        
+        root.style.setProperty('--logo-w', styles.logo_w + 'px');
+        root.style.setProperty('--logo-x', styles.logo_x + 'px');
+        root.style.setProperty('--logo-y', styles.logo_y + 'px');
+        
+        root.style.setProperty('--add-scale', styles.add_sz);
+        root.style.setProperty('--add-x', styles.add_x + 'px');
+        root.style.setProperty('--add-y', styles.add_y + 'px');
+        
+        localStorage.setItem('eyeq_header_styles', JSON.stringify(styles));
+    };
+
+    window.loadHeaderStylesToUI = function() {
+        let def = { cons_sz: 1, cons_x: 0, cons_y: 0, title_sz: 1, title_x: 0, title_y: 0, logo_w: 100, logo_x: 0, logo_y: 0, add_sz: 1, add_x: 0, add_y: 0 };
+        let styles = JSON.parse(localStorage.getItem('eyeq_header_styles')) || def;
+        
+        document.getElementById('ctrl_cons_sz').value = styles.cons_sz;
+        document.getElementById('ctrl_cons_x').value = styles.cons_x;
+        document.getElementById('ctrl_cons_y').value = styles.cons_y;
+        
+        document.getElementById('ctrl_title_sz').value = styles.title_sz;
+        document.getElementById('ctrl_title_x').value = styles.title_x;
+        document.getElementById('ctrl_title_y').value = styles.title_y;
+        
+        document.getElementById('ctrl_logo_w').value = styles.logo_w;
+        document.getElementById('ctrl_logo_x').value = styles.logo_x;
+        document.getElementById('ctrl_logo_y').value = styles.logo_y;
+        
+        document.getElementById('ctrl_add_sz').value = styles.add_sz;
+        document.getElementById('ctrl_add_x').value = styles.add_x;
+        document.getElementById('ctrl_add_y').value = styles.add_y;
+        
+        window.applyLiveHeaderStyles();
+    };
+
+    window.resetHeaderStyles = function() {
+        let def = { cons_sz: 1, cons_x: 0, cons_y: 0, title_sz: 1, title_x: 0, title_y: 0, logo_w: 100, logo_x: 0, logo_y: 0, add_sz: 1, add_x: 0, add_y: 0 };
+        localStorage.setItem('eyeq_header_styles', JSON.stringify(def));
+        window.loadHeaderStylesToUI();
+    };
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = (el.scrollHeight) + 'px';
+    }
+
+    // --- LIBRARY BULK FILE UPLOAD ---
+    window.handleLibFileUpload = function(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const cat = document.getElementById('lib_cat').value;
+        
+        if(file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const items = text.split(/[\n,]+/).map(i => i.trim().toUpperCase()).filter(i => i);
+                items.forEach(item => window.manualAddLibSilent(cat, item));
+                window.showToast(`Imported ${items.length} items from ${file.name}`);
+                setTimeout(() => window.renderLibrary(), 1500);
+            };
+            reader.readAsText(file);
+        } else if (file.name.endsWith('.pdf') || file.name.match(/\.(jpg|jpeg|png)$/i)) {
+            window.showToast("File accepted. Advanced OCR/PDF parsing requires a cloud server API. For instant bulk import, please use a .CSV or .TXT file.");
+        }
+        input.value = ''; 
+    }
+
+    // --- LIBRARY UI TOGGLE WITH EXTRA LINES ---
+    window.toggleLibInputArea = function() {
+        if(document.getElementById('lib_cat').value === 'dl_consultant') {
+            document.getElementById('standard_lib_input_area').style.display = 'none';
+            document.getElementById('consultant_lib_input_area').style.display = 'flex';
+            document.getElementById('lib_hint_text').innerHTML = '<b>Consultant Format:</b> NAME | DESIGNATION | DEGREES | EXTRA INFO | PHONE | TIMINGS<br>(Use the "+ Add Extra Line" button if needed)';
+        } else if(document.getElementById('lib_cat').value === 'dl_brands') {
+            document.getElementById('standard_lib_input_area').style.display = 'flex';
+            document.getElementById('consultant_lib_input_area').style.display = 'none';
+            document.getElementById('lib_hint_text').innerHTML = '<b>Brand & Composition Link:</b> BRAND NAME | COMPOSITION<br>(e.g. <i>MILFLODEX | MOXIFLOXACIN 0.5% + DEXAMETHASONE 0.1%</i>)';
+        } else {
+            document.getElementById('standard_lib_input_area').style.display = 'flex';
+            document.getElementById('consultant_lib_input_area').style.display = 'none';
+            document.getElementById('lib_hint_text').innerHTML = '<b>Bulk Data Import:</b> Upload a .CSV or .TXT file to instantly populate the category below.';
+        }
+    }
+    
+    // --- EXTRA LINE BUILDER ---
+    window.extraLineCount = 0;
+    window.addExtraConsLine = function() {
+        if(window.extraLineCount >= 3) { window.showToast("Max 3 extra lines allowed"); return; }
+        window.extraLineCount++;
+        let cont = document.getElementById('extra_lines_container');
+        let inp = document.createElement('input');
+        inp.type = "text";
+        inp.id = "lib_cons_extra_" + window.extraLineCount;
+        inp.placeholder = "EXTRA INFO LINE " + window.extraLineCount;
+        inp.style.cssText = "padding:10px; font-size:11px; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:4px;";
+        cont.appendChild(inp);
+    };
+
+    // --- ADD CONSULTANT TO LIBRARY ---
+    window.addConsultantToLib = async function() {
+        if (!db || !userId) { window.showToast("Cannot save while offline."); return; }
+        const name = document.getElementById('lib_cons_name').value.trim().toUpperCase();
+        const deg = document.getElementById('lib_cons_deg').value.trim().toUpperCase();
+        const degrees = document.getElementById('lib_cons_degrees').value.trim().toUpperCase();
+        
+        const ex1 = document.getElementById('lib_cons_extra_1') ? document.getElementById('lib_cons_extra_1').value.trim().toUpperCase() : "";
+        const ex2 = document.getElementById('lib_cons_extra_2') ? document.getElementById('lib_cons_extra_2').value.trim().toUpperCase() : "";
+        const ex3 = document.getElementById('lib_cons_extra_3') ? document.getElementById('lib_cons_extra_3').value.trim().toUpperCase() : "";
+        
+        const phone = document.getElementById('lib_cons_phone').value.trim().toUpperCase();
+        const time = document.getElementById('lib_cons_time').value.trim().toUpperCase() || "10:00 AM - 08:00 PM";
+        
+        if(!name) { window.showToast("Name is required!"); return; }
+        
+        // Exact 8 parts
+        const val = `${name} | ${deg} | ${degrees} | ${ex1} | ${ex2} | ${ex3} | ${phone} | ${time}`;
+        
+        try {
+            const docId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').doc(docId).set({ id: docId, category: 'dl_consultant', value: val });
+            
+            // Reset
+            document.getElementById('lib_cons_name').value = '';
+            document.getElementById('lib_cons_deg').value = '';
+            document.getElementById('lib_cons_degrees').value = '';
+            document.getElementById('extra_lines_container').innerHTML = '';
+            window.extraLineCount = 0;
+            document.getElementById('lib_cons_phone').value = '';
+            document.getElementById('lib_cons_time').value = '';
+            
+            window.showToast("Consultant Profile Saved!");
+            window.renderLibrary(); window.updateDatalists();
+        } catch (e) { console.error(e); window.showToast("Error saving item."); }
+    };
+
+    // --- DYNAMIC HEADER CONSULTANT PARSER (HANDLES EXTRA LINES) ---
+    document.getElementById('consultant_box').addEventListener('change', function() {
+        const val = this.value.trim().toUpperCase();
+        const headName = document.getElementById('head_doc_name');
+        const headDeg = document.getElementById('head_doc_deg');
+        const headDegrees = document.getElementById('head_doc_degrees');
+        
+        const headExtra1 = document.getElementById('head_doc_extra_1');
+        const headExtra2 = document.getElementById('head_doc_extra_2');
+        const headExtra3 = document.getElementById('head_doc_extra_3');
+        
+        const footTiming = document.getElementById('footer_timing_text');
+        const timingInput = document.getElementById('timing_input');
+        
+        const signName = document.getElementById('print_cons_name_only');
+
+        if (val === '' || val.includes('CHAYAN')) {
+            headName.innerText = "CHAYAN DEY KABIRAJ";
+            headDeg.innerText = "CONSULTANT OPTOMETRIST";
+            headDegrees.innerText = "";
+            headExtra1.innerText = "";
+            headExtra2.innerText = "";
+            headExtra3.innerText = "";
+            timingInput.value = "10:00 AM - 08:00 PM";
+            signName.innerText = "OPTOM. CHAYAN DEY KABIRAJ";
+            if(footTiming) footTiming.innerText = "10:00 AM - 08:00 PM";
+        } else {
+            let parts = val.split('|').map(s => s.trim());
+            
+            headName.innerText = parts[0] || val;
+            headDeg.innerText = parts[1] || "";
+            headDegrees.innerText = parts[2] || "";
+            
+            signName.innerText = parts[0] || val;
+            
+            // Extract from end safely
+            let t = parts.length > 1 ? parts[parts.length - 1] : "";
+            
+            // Extras are from index 3 up to length-2
+            let extras = parts.slice(3, parts.length - 2);
+            headExtra1.innerText = extras[0] || "";
+            headExtra2.innerText = extras[1] || "";
+            headExtra3.innerText = extras[2] || "";
+            
+            timingInput.value = t;
+            if(footTiming) footTiming.innerText = t;
+        }
+        
+        headDegrees.style.display = headDegrees.innerText ? 'block' : 'none';
+        headExtra1.style.display = headExtra1.innerText ? 'block' : 'none';
+        headExtra2.style.display = headExtra2.innerText ? 'block' : 'none';
+        headExtra3.style.display = headExtra3.innerText ? 'block' : 'none';
+    });
+
+    document.getElementById('timing_input').addEventListener('input', function() {
+        document.getElementById('footer_timing_text').innerText = this.value.trim().toUpperCase();
+    });
+    
+    // --- SMART BRAND & COMPOSITION AUTO-FILL ---
+    window.handleBrandSelect = function(el) {
+        let val = el.value.toUpperCase();
+        if(val.includes('|')) {
+            let parts = val.split('|');
+            el.value = parts[0].trim();
+            let tr = el.closest('tr');
+            let compInput = tr.querySelector('input[list="dl_compos"]');
+            if(compInput) compInput.value = parts[1].trim();
+        }
+    };
+
+    // --- MANUAL PRINT FORMATTER (Converts Textareas to Inline single strings + Forces Uppercase) ---
+    window.formatForPrint = function() {
+        document.getElementById('p_pt_name').innerText = document.getElementById('pt_name').value.toUpperCase();
+        
+        let ageStr = document.getElementById('pt_age').value;
+        let sexStr = document.getElementById('pt_sex').value.toUpperCase();
+        document.getElementById('p_pt_age_sex').innerText = (ageStr ? ageStr : '') + (ageStr && sexStr ? ' / ' : '') + sexStr;
+        
+        document.getElementById('p_dt_now').innerText = document.getElementById('dt_now').value.toUpperCase();
+        document.getElementById('p_pt_phone').innerText = document.getElementById('pt_phone').value;
+        document.getElementById('p_mrd_no').innerText = document.getElementById('mrd_no').value.toUpperCase();
+
+        const formatInline = (inputId) => {
+            let val = document.getElementById(inputId).value.trim().toUpperCase();
+            return val.replace(/\n• /g, ', ').replace(/\n/g, ', ').replace(/^• /, '');
+        };
+
+        const ccEye = document.getElementById('cc_eye').value.toUpperCase();
+        const ccVal = formatInline('cc_final');
+        document.getElementById('p_cc_val').innerText = (ccEye && ccEye !== '-' ? ccEye + ': ' : '') + ccVal;
+        document.getElementById('p_cc_box').style.display = ccVal ? 'block' : 'none';
+
+        const patEye = document.getElementById('pat_eye').value.toUpperCase();
+        const patVal = formatInline('pat_hist_final');
+        document.getElementById('p_pat_val').innerText = (patEye && patEye !== '-' ? patEye + ': ' : '') + patVal;
+        document.getElementById('p_pat_box').style.display = patVal ? 'block' : 'none';
+
+        const sysVal = formatInline('sys_hist_final');
+        document.getElementById('p_sys_val').innerText = sysVal;
+        document.getElementById('p_sys_box').style.display = sysVal ? 'block' : 'none';
+
+        const diagVal = document.getElementById('diag_final_text').value.trim().toUpperCase();
+        document.getElementById('p_diag_val').innerText = diagVal.replace(/\n/g, ', ');
+        document.getElementById('p_diag_box').style.display = diagVal ? 'block' : 'none';
+        
+        const advVal = formatInline('advice_text');
+        document.getElementById('p_adv_val').innerText = advVal;
+        document.getElementById('p_adv_box').style.display = advVal ? 'block' : 'none';
+
+        // Follow Up
+        document.getElementById('p_fu_date').innerText = document.getElementById('fu_date_txt').value.toUpperCase();
+        document.getElementById('p_fu_remarks').innerText = document.getElementById('fu_remarks').value.toUpperCase();
+
+        // EXACT FORMAT RX TABLE -> LIST
+        const rxBody = document.getElementById('rx_body');
+        const printRxList = document.getElementById('print_rx_list');
+        printRxList.innerHTML = '';
+        let rxHasVal = false;
+
+        rxBody.querySelectorAll('tr').forEach(tr => {
+            const selects = tr.querySelectorAll('select');
+            const inputs = tr.querySelectorAll('input');
+            
+            // Force strict uppercase
+            const eye = (selects[0] ? selects[0].value : '').toUpperCase();
+            const form = (inputs[0] ? inputs[0].value.trim() : '').toUpperCase();
+            const brand = (inputs[1] ? inputs[1].value.trim() : '').toUpperCase();
+            const comp = (inputs[2] ? inputs[2].value.trim() : '').toUpperCase();
+            const freq = (inputs[3] ? inputs[3].value.trim() : '').toUpperCase();
+            const dur = (inputs[4] ? inputs[4].value.trim() : '').toUpperCase();
+
+            if (brand !== '') {
+                rxHasVal = true;
+                let compStr = comp ? `<span style="font-size:7.5px;">(${comp})</span>` : '';
+                let eyeStr = eye && eye !== '-' ? `<strong style="font-size:11.5px; color:var(--text);">${eye}:</strong> ` : '';
+                let formStr = form ? `${form} - ` : '';
+                let freqStr = freq ? ` &nbsp;&#8594;&nbsp; ${freq}` : '';
+                let durStr = dur ? ` &nbsp;&#8594;&nbsp; FOR ${dur}` : '';
+                
+                let line = `<div style="margin-bottom: 7px; font-size: 11px; font-weight:800; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px;">
+                               ${eyeStr} ${formStr} <strong style="font-size:13px; color:#000;">${brand}</strong> ${compStr} ${freqStr} ${durStr}
+                            </div>`;
+                printRxList.innerHTML += line;
+            }
+        });
+
+        if (!rxHasVal) { document.getElementById('sec-rx').classList.add('hide-on-print'); }
+
+        let refractHasVal = false;
+        document.querySelectorAll('#sec-refract select').forEach(sel => {
+            if (sel.value.trim() !== '') refractHasVal = true;
+        });
+        if (!refractHasVal) { document.getElementById('sec-refract').classList.add('hide-on-print'); }
+        
+        // LENS PRINT FORMATTER (COMMA SYSTEM)
+        let lType = document.getElementById('lens_type').value.trim().toUpperCase();
+        let lMat = document.getElementById('lens_mat').value.trim().toUpperCase();
+        let lCoat = document.getElementById('lens_coat').value.trim().toUpperCase();
+        
+        let lensHtml = '';
+        if(lType) lensHtml += `<span class="print-label" style="font-size:9.5px;">LENS TYPE:</span> <span class="print-val" style="font-size:9.5px;">${lType}</span> &nbsp;&nbsp;&nbsp;`;
+        if(lMat) lensHtml += `<span class="print-label" style="font-size:9.5px;">LENS MATERIAL:</span> <span class="print-val" style="font-size:9.5px;">${lMat}</span> &nbsp;&nbsp;&nbsp;`;
+        if(lCoat) lensHtml += `<span class="print-label" style="font-size:9.5px;">LENS COATING:</span> <span class="print-val" style="font-size:9.5px;">${lCoat}</span>`;
+        
+        document.getElementById('p_lens_box').innerHTML = lensHtml;
+        document.getElementById('p_lens_box').style.display = (lType || lMat || lCoat) ? 'block' : 'none';
+        document.getElementById('interactive_lens_sec').classList.add('hide-on-print');
+
+        document.querySelectorAll('textarea').forEach(ta => autoResize(ta));
+
+        // Signature logic guarantees no cut-off using parsed text
+        const printCons = document.getElementById('print_consultant');
+        let cText = document.getElementById('consultant_box').value.trim().toUpperCase();
+        let parts = cText.split('|').map(s=>s.trim());
+        
+        if(cText === "" || parts[0].includes("CHAYAN")) {
+            printCons.innerHTML = "<div style='display:inline-block; border-top:1px dashed var(--royal-blue); width:160px; padding-top:4px; font-size:10px; font-weight:800; color:var(--royal-blue); text-align:center;'>SIGNATURE<br><span style='font-size:8px; font-weight:600; color:var(--text);'>OPTOM. CHAYAN DEY KABIRAJ</span></div>";
+        } else {
+            printCons.innerHTML = "<div style='display:inline-block; border-top:1px dashed var(--royal-blue); width:160px; padding-top:4px; font-size:10px; font-weight:800; color:var(--royal-blue); text-align:center;'>SIGNATURE<br><span style='font-size:8px; font-weight:600; color:var(--text);'>" + (parts[0]) + "</span></div>";
+        }
+        
+        // Update Timing for print explicitly from input
+        document.getElementById('footer_timing_text').innerText = document.getElementById('timing_input').value.trim().toUpperCase();
+    };
+
+    window.addEventListener('beforeprint', window.formatForPrint);
+
+    window.addEventListener('afterprint', function() {
+        document.querySelectorAll('.hide-on-print').forEach(el => el.classList.remove('hide-on-print'));
+    });
+
+    window.addMulti = function(sourceId, targetId, listId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        if (!source || !target) return;
+        const val = source.value.trim().toUpperCase();
+        if (val === '') return;
+        if (window.manualAddLibSilent) window.manualAddLibSilent(listId, val);
+
+        if (target.value.trim() === '') { target.value = val; } 
+        else { target.value = target.value.trim() + '\n• ' + val; }
+        
+        source.value = '';
+        autoResize(target);
+    };
+
+    // --- COMMA BUILDER FOR LENSES ---
+    window.addMultiComma = function(sourceId, targetId, listId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        if (!source || !target) return;
+        const val = source.value.trim().toUpperCase();
+        if (val === '') return;
+        if (window.manualAddLibSilent) window.manualAddLibSilent(listId, val);
+
+        if (target.value.trim() === '') { target.value = val; } 
+        else { target.value = target.value.trim() + ', ' + val; }
+        
+        source.value = '';
+    };
+
+    window.addInlineField = function(inputId, listId) {
+        const input = document.getElementById(inputId);
+        if(input && input.value.trim() !== '') {
+            window.manualAddLibSilent(listId, input.value.trim().toUpperCase());
+            window.showToast("Saved to Library!");
+        }
+    };
+
+    window.buildDiagnosis = function() {
+        const eye = document.getElementById('diag_eye_build').value;
+        const diseaseInput = document.getElementById('diag_disease_build');
+        const finalBox = document.getElementById('diag_final_text');
+        const val = diseaseInput.value.trim().toUpperCase();
+        
+        if (val === '') return;
+        window.manualAddLibSilent('dl_diag_disease', val);
+        const newDiag = eye + " : " + val;
+        
+        if (finalBox.value.trim() === '') { finalBox.value = newDiag; } 
+        else { finalBox.value = finalBox.value.trim() + '\n' + newDiag; }
+        diseaseInput.value = '';
+        autoResize(finalBox);
+    };
+
+    window.manualAddLibSilent = async function(cat, val) {
+        if (!val || !db || !userId) return;
+        try {
+            const dl = document.getElementById(cat);
+            if (dl) {
+                const options = Array.from(dl.options).map(o => o.value);
+                if (options.includes(val)) return;
+            }
+            const docId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').doc(docId).set({ id: docId, category: cat, value: val });
+            window.updateDatalists();
+        } catch (e) { console.error("Silent save failed", e); }
+    };
+
+    window.showToast = function(msg) {
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.className = 'no-print';
+            toast.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:10px 20px; border-radius:50px; font-size:12px; z-index:9999; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.3); transition: opacity 0.3s; pointer-events:none; text-align:center; min-width: 200px;';
+            document.body.appendChild(toast);
+        }
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display='none', 300); }, 3000);
+    };
+
+    window.showView = function(id) {
+        var views = ['view-home', 'view-presc', 'view-library'];
+        for(var i=0; i<views.length; i++) {
+            var el = document.getElementById(views[i]);
+            if(el) el.classList.add('hidden');
+        }
+        var target = document.getElementById(id);
+        if(target) target.classList.remove('hidden');
+        if(id === 'view-home') window.renderRecent();
+        if(id === 'view-library') window.renderLibrary();
+    };
+
+    window.addRxRow = function() {
+        rxCounter++;
+        var tr = document.createElement('tr');
+        tr.innerHTML = 
+            '<td><select style="border:1px solid #e2e8f0; padding:2px;"><option>BE</option><option>RE</option><option>LE</option><option>-</option></select></td>' +
+            '<td><div style="display:flex;"><input type="text" id="rx_fom_'+rxCounter+'" list="dl_form" placeholder="FORM" style="flex:1;"><button type="button" class="no-print rx-inline-btn" onclick="window.addInlineField(\'rx_fom_'+rxCounter+'\', \'dl_form\')">+</button></div></td>' +
+            '<td style="display:flex;"><input type="text" id="rx_b_'+rxCounter+'" list="dl_brands" placeholder="BRAND" style="flex:1;" oninput="window.handleBrandSelect(this)"><button type="button" class="no-print rx-inline-btn" onclick="window.addInlineField(\'rx_b_'+rxCounter+'\', \'dl_brands\')">+</button></td>' +
+            '<td><div style="display:flex;"><input type="text" id="rx_c_'+rxCounter+'" list="dl_compos" placeholder="COMP" style="flex:1;"><button type="button" class="no-print rx-inline-btn" onclick="window.addInlineField(\'rx_c_'+rxCounter+'\', \'dl_compos\')">+</button></div></td>' +
+            '<td><div style="display:flex;"><input type="text" id="rx_f_'+rxCounter+'" list="dl_freq" placeholder="FREQ/TAPER" style="flex:1;"><button type="button" class="no-print rx-inline-btn" onclick="window.addInlineField(\'rx_f_'+rxCounter+'\', \'dl_freq\')">+</button></div></td>' +
+            '<td style="display:flex; align-items:center; border:none; padding:4px;">' +
+            '<input type="text" list="dl_dur" placeholder="DUR" style="flex:1; border:none; padding:2px; font-size:8px;">' +
+            '<input type="date" class="no-print" style="width:20px; border:none; background:transparent;" onchange="this.previousElementSibling.value=\'UPTO \'+this.value.split(\'-\').reverse().join(\'/\')">' +
+            '</td>' +
+            '<td class="no-print" style="width:15px;"><button onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button></td>';
+        document.getElementById('rx_body').appendChild(tr);
+    };
+
+    function updateOnlineStatus() {
+        const syncIcon = document.getElementById('sync-icon');
+        if (!syncIcon) return;
+        if (navigator.onLine && db && userId) {
+            syncIcon.innerHTML = "🟢 ONLINE";
+            syncIcon.className = "sync-status sync-active";
+        } else {
+            syncIcon.innerHTML = "🔴 OFFLINE";
+            syncIcon.className = "sync-status";
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    window.startNewPatient = async function() {
+        window.showView('view-presc');
+        var inputs = document.querySelectorAll('#view-presc input:not(#consultant_box):not(#timing_input)');
+        var textareas = document.querySelectorAll('#view-presc textarea');
+        for(var i=0; i<inputs.length; i++) { if(inputs[i].type !== 'checkbox' && inputs[i].type !== 'file' && inputs[i].type !== 'range') inputs[i].value = ''; }
+        for(var i=0; i<textareas.length; i++) { textareas[i].value = ''; autoResize(textareas[i]); }
+        
+        var selects = document.querySelectorAll('#view-presc select:not(#pt_sex):not(#consultant_box)');
+        for(var i=0; i<selects.length; i++) { selects[i].selectedIndex = 0; }
+        document.getElementById('pt_sex').selectedIndex = 0;
+        
+        document.getElementById('rx_body').innerHTML = '';
+        document.getElementById('visit_history_container').style.display = 'none';
+        window.addRxRow();
+        document.getElementById('dt_now').value = new Date().toLocaleString('en-IN', { hour12: true }).toUpperCase();
+        document.getElementById('mrd_no').value = "GENERATING...";
+
+        // Ensure Default Consultant doesn't override manual selection if available
+        if(!document.getElementById('consultant_box').value) {
+            document.getElementById('consultant_box').value = "CHAYAN DEY KABIRAJ | CONSULTANT OPTOMETRIST | | | | | 7980931569 | 10:00 AM - 08:00 PM";
+            document.getElementById('consultant_box').dispatchEvent(new Event('change'));
+        } else {
+            document.getElementById('consultant_box').dispatchEvent(new Event('change'));
+        }
+
+        if (db && userId) {
+            try {
+                const counterRef = db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('metadata').doc('mrd_counter');
+                const newMrdNum = await db.runTransaction(async (transaction) => {
+                    const sfDoc = await transaction.get(counterRef);
+                    let nextNum = 1001; 
+                    if (sfDoc.exists) { nextNum = (sfDoc.data().current || 1000) + 1; }
+                    transaction.set(counterRef, { current: nextNum });
+                    return nextNum;
+                });
+                var mrd = "EYEQ-" + newMrdNum;
+                document.getElementById('mrd_no').value = mrd;
+                if(window.JsBarcode) { setTimeout(function(){ JsBarcode("#barcode-svg", mrd, {height:20, fontSize:9, width: 1.2, margin:0}); }, 300); }
+            } catch(e) {
+                console.error("Transaction failed: ", e);
+                var fallbackMrd = "EYEQ-" + Math.floor(100000 + Math.random() * 900000);
+                document.getElementById('mrd_no').value = fallbackMrd;
+                if(window.JsBarcode) setTimeout(function(){ JsBarcode("#barcode-svg", fallbackMrd, {height:20, fontSize:9, width: 1.2, margin:0}); }, 300);
+            }
+        } else {
+            var mrd = "EYEQ-" + Math.floor(100000 + Math.random() * 900000);
+            document.getElementById('mrd_no').value = mrd;
+            if(window.JsBarcode) setTimeout(function(){ JsBarcode("#barcode-svg", mrd, {height:20, fontSize:9, width: 1.2, margin:0}); }, 300);
+        }
+    };
+
+    window.saveAndPrint = function() {
+        window.showToast("Generating PDF...");
+        window.formatForPrint();
+        setTimeout(() => {
+            window.print();
+            window.saveToCloudSilently();
+        }, 300);
+    };
+
+    window.saveToCloudSilently = async function() {
+        const mrd = document.getElementById('mrd_no').value;
+        const ptName = document.getElementById('pt_name').value.toUpperCase();
+        
+        if (!db || !userId || !mrd || mrd.includes("GENERATING")) return;
+
+        const getDdl = (cls, idx) => document.querySelectorAll(cls)[idx]?.value || '';
+        let ageStr = document.getElementById('pt_age').value;
+        let sexStr = document.getElementById('pt_sex').value.toUpperCase();
+        let finalAgeSex = (ageStr ? ageStr : '') + (ageStr && sexStr ? '/' : '') + sexStr;
+
+        const record = {
+            timestamp: Date.now(),
+            mrd: mrd, name: ptName || "UNKNOWN", age_sex: finalAgeSex,
+            phone: document.getElementById('pt_phone').value || '',
+            date: document.getElementById('dt_now').value.toUpperCase() || '', cc_eye: document.getElementById('cc_eye')?.value || '',
+            
+            complaints: document.getElementById('cc_final')?.value.toUpperCase() || '', 
+            sysHistory: document.getElementById('sys_hist_final')?.value.toUpperCase() || '',
+            patHistory: document.getElementById('pat_hist_final')?.value.toUpperCase() || '',
+            pat_eye: document.getElementById('pat_eye')?.value || '',
+            diag_final: document.getElementById('diag_final_text')?.value.toUpperCase() || '', 
+            
+            re: { uavn: getDdl('.va_d', 0), avn: getDdl('.va_d', 1), phvn: getDdl('.va_d', 2), sph: getDdl('.sph_d', 0), cyl: getDdl('.cyl_d', 0), ax: getDdl('.ax_d', 0), bcvn: getDdl('.va_d', 3), nadd: getDdl('.nadd_d', 0), nv: getDdl('.nv_d', 0) },
+            le: { uavn: getDdl('.va_d', 4), avn: getDdl('.va_d', 5), phvn: getDdl('.va_d', 6), sph: getDdl('.sph_d', 1), cyl: getDdl('.cyl_d', 1), ax: getDdl('.ax_d', 1), bcvn: getDdl('.va_d', 7), nadd: getDdl('.nadd_d', 1), nv: getDdl('.nv_d', 1) },
+            
+            lens_type: document.getElementById('lens_type')?.value.toUpperCase() || '', lens_mat: document.getElementById('lens_mat')?.value.toUpperCase() || '', lens_coat: document.getElementById('lens_coat')?.value.toUpperCase() || '',
+            
+            iop_method: document.getElementById('iop_method')?.value || '', iop_od: document.getElementById('iop_od')?.value || '', iop_os: document.getElementById('iop_os')?.value || '',
+            findings_od: document.getElementById('od_f')?.value.toUpperCase() || '', findings_os: document.getElementById('os_f')?.value.toUpperCase() || '',
+            advice: document.getElementById('advice_text')?.value.toUpperCase() || '',
+            medicines: Array.from(document.querySelectorAll('#rx_body tr')).map(tr => {
+                const selects = tr.querySelectorAll('select');
+                const inputs = tr.querySelectorAll('input');
+                return { eye: selects[0]?.value.toUpperCase() || '', form: inputs[0]?.value.toUpperCase() || '', brand: inputs[1]?.value.toUpperCase() || '', comp: inputs[2]?.value.toUpperCase() || '', freq: inputs[3]?.value.toUpperCase() || '', dur: inputs[4]?.value.toUpperCase() || '' };
+            }),
+            fu_remarks: document.getElementById('fu_remarks')?.value.toUpperCase() || '', fu_date: document.getElementById('fu_date_txt')?.value.toUpperCase() || '',
+            consultant: document.getElementById('consultant_box')?.value.toUpperCase() || '',
+            timing: document.getElementById('timing_input')?.value.toUpperCase() || ''
+        };
+
+        try {
+            const patientRef = db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('patients').doc(mrd);
+            await patientRef.set(record);
+            const visitId = record.timestamp.toString();
+            await patientRef.collection('visits').doc(visitId).set(record);
+            window.showToast("Saved Successfully to Cloud!");
+        } catch (err) { console.error("Cloud save failed:", err); }
+    };
+
+    window.startFollowUp = function() {
+        const mrd = document.getElementById('mrd_no').value;
+        if(!mrd) { window.showToast("No active patient to review."); return; }
+        const keepIds = ['pt_name', 'pt_age', 'pt_sex', 'pt_phone', 'mrd_no', 'consultant_box', 'timing_input'];
+        const inputs = document.querySelectorAll('#view-presc input, #view-presc textarea');
+        inputs.forEach(input => { if (!keepIds.includes(input.id) && input.type !== 'checkbox' && input.type !== 'range') { input.value = ''; } });
+        const selects = document.querySelectorAll('#view-presc select');
+        selects.forEach(select => { if (!keepIds.includes(select.id)) { select.selectedIndex = 0; } });
+        document.getElementById('dt_now').value = new Date().toLocaleString('en-IN', { hour12: true }).toUpperCase();
+        document.getElementById('rx_body').innerHTML = '';
+        document.getElementById('visit_history_container').style.display = 'none';
+        window.addRxRow();
+        window.showToast("Ready for New Visit. Demographics Retained.");
+    };
+
+    window.populateForm = function(record) {
+        const setVal = (id, val) => { const el = document.getElementById(id); if(el) { el.value = val || ''; autoResize(el); } };
+        const setDdl = (cls, idx, val) => { const els = document.querySelectorAll(cls); if(els[idx]) els[idx].value = val || ''; };
+        setVal('pt_name', record.name); 
+        
+        // Handle old 'age_sex' combined format vs new separate format
+        if(record.age_sex && record.age_sex.includes('/')) {
+            let parts = record.age_sex.split('/');
+            setVal('pt_age', parts[0]);
+            setVal('pt_sex', parts[1]);
+        } else {
+            setVal('pt_age', record.age); setVal('pt_sex', record.sex || 'MALE');
+        }
+        
+        setVal('pt_phone', record.phone); 
+        setVal('mrd_no', record.mrd); 
+        setVal('dt_now', record.date);
+        
+        setVal('cc_eye', record.cc_eye); 
+        setVal('cc_final', record.complaints); 
+        setVal('sys_hist_final', record.sysHistory);
+        setVal('pat_hist_final', record.patHistory);
+        setVal('pat_eye', record.pat_eye);
+
+        if (record.re) {
+            setDdl('.va_d', 0, record.re.uavn); setDdl('.va_d', 1, record.re.avn); setDdl('.va_d', 2, record.re.phvn); setDdl('.va_d', 3, record.re.bcvn);
+            setDdl('.sph_d', 0, record.re.sph); setDdl('.cyl_d', 0, record.re.cyl); setDdl('.ax_d', 0, record.re.ax);
+            setDdl('.nadd_d', 0, record.re.nadd); setDdl('.nv_d', 0, record.re.nv);
+        }
+        if (record.le) {
+            setDdl('.va_d', 4, record.le.uavn); setDdl('.va_d', 5, record.le.avn); setDdl('.va_d', 6, record.le.phvn); setDdl('.va_d', 7, record.le.bcvn);
+            setDdl('.sph_d', 1, record.le.sph); setDdl('.cyl_d', 1, record.le.cyl); setDdl('.ax_d', 1, record.le.ax);
+            setDdl('.nadd_d', 1, record.le.nadd); setDdl('.nv_d', 1, record.le.nv);
+        }
+        
+        setVal('lens_type', record.lens_type); setVal('lens_mat', record.lens_mat); setVal('lens_coat', record.lens_coat);
+        
+        setVal('iop_method', record.iop_method || 'NCT'); setVal('iop_od', record.iop_od); setVal('iop_os', record.iop_os);
+        setVal('od_f', record.findings_od); setVal('os_f', record.findings_os);
+        
+        setVal('diag_final_text', record.diag_final); 
+        setVal('advice_text', record.advice);
+        
+        if(record.consultant) {
+            const cBox = document.getElementById('consultant_box');
+            let exists = Array.from(cBox.options).some(opt => opt.value === record.consultant);
+            if(!exists && record.consultant) {
+                let opt = document.createElement('option');
+                opt.value = record.consultant;
+                opt.textContent = record.consultant.split('|')[0].trim();
+                cBox.appendChild(opt);
+            }
+            cBox.value = record.consultant;
+            setVal('timing_input', record.timing || "10:00 AM - 08:00 PM");
+            cBox.dispatchEvent(new Event('change'));
+        }
+
+        const rxBody = document.getElementById('rx_body'); rxBody.innerHTML = '';
+        if (record.medicines && record.medicines.length > 0) {
+            record.medicines.forEach(med => {
+                window.addRxRow(); const rows = rxBody.querySelectorAll('tr'); 
+                const selects = rows[rows.length - 1].querySelectorAll('select');
+                const inputs = rows[rows.length - 1].querySelectorAll('input');
+                selects[0].value = med.eye || 'BE';
+                inputs[0].value = med.form || ''; inputs[1].value = med.brand || ''; inputs[2].value = med.comp || '';
+                inputs[3].value = med.freq || ''; inputs[4].value = med.dur || '';
+            });
+        } else { window.addRxRow(); }
+        setVal('fu_remarks', record.fu_remarks); setVal('fu_date_txt', record.fu_date);
+        if(window.JsBarcode) { JsBarcode("#barcode-svg", record.mrd, {height:20, fontSize:9, width: 1.2, margin:0}); }
+    };
+
+    window.loadRecord = async function(mrd) {
+        if (!db || !userId) return;
+        window.showToast("Retrieving Full Medical Record...");
+        try {
+            const patientRef = db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('patients').doc(mrd);
+            const doc = await patientRef.get();
+            if (!doc.exists) { window.showToast("Record not found."); return; }
+            window.populateForm(doc.data());
+
+            const visitsSnap = await patientRef.collection('visits').orderBy('timestamp', 'desc').get();
+            const visitsContainer = document.getElementById('visit_history_container');
+            if (visitsContainer) {
+                if (!visitsSnap.empty && visitsSnap.size > 1) {
+                    let html = `<strong style="color:var(--royal-blue)">PREVIOUS VISITS:</strong> `;
+                    visitsSnap.forEach(vDoc => {
+                        const vData = vDoc.data();
+                        html += `<button type="button" style="margin-left:5px; margin-top:3px; padding:4px 8px; font-size:8px; font-weight:bold; background:var(--royal-blue); color:white; border:none; border-radius:3px; cursor:pointer;" onclick='window.populateForm(${JSON.stringify(vData).replace(/'/g, "\\'")})'>${vData.date.split(',')[0]}</button>`;
+                    });
+                    visitsContainer.innerHTML = html; visitsContainer.style.display = 'block';
+                } else { visitsContainer.style.display = 'none'; }
+            }
+            window.closeSearch(); window.showView('view-presc'); window.showToast("Record loaded successfully.");
+        } catch (err) { console.error("Error loading record:", err); window.showToast("Failed to load record."); }
+    };
+
+    window.renderRecent = async function() {
+        const listDiv = document.getElementById('recent-list');
+        if (!listDiv || !db || !userId) return;
+        try {
+            const snapshot = await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('patients').get();
+            let records = []; snapshot.forEach(doc => records.push(doc.data()));
+            records.sort((a, b) => b.timestamp - a.timestamp);
+            listDiv.innerHTML = "";
+            records.slice(0, 10).forEach(rec => {
+                const item = document.createElement('div');
+                item.style.padding = "10px"; item.style.borderBottom = "1px solid #e2e8f0"; item.style.fontSize = "10px"; item.style.fontWeight = "bold"; item.style.cursor = "pointer";
+                item.onclick = () => window.loadRecord(rec.mrd);
+                item.innerHTML = `<span style="color:#b48c36;">${rec.mrd}</span> - ${rec.name} <span style="float:right; color:#64748b; font-weight:normal;">${rec.date.split(',')[0]}</span>`;
+                listDiv.appendChild(item);
+            });
+            if(records.length === 0) listDiv.innerHTML = "<div style='font-size:10px; padding:10px;'>No recent records found.</div>";
+        } catch (err) { console.error("Error loading recents:", err); }
+    };
+
+    window.openSearch = function() {
+        document.getElementById('searchModal').style.display = 'flex';
+        const searchInput = document.getElementById('universal_search');
+        searchInput.value = ''; document.getElementById('res_box').innerHTML = '';
+        setTimeout(() => searchInput.focus(), 100);
+    };
+    window.closeSearch = function() { document.getElementById('searchModal').style.display = 'none'; };
+
+    window.handleSearchKey = function(event) {
+        const val = event.target.value.trim().toUpperCase();
+        if (event.key === 'Enter') { if (val.startsWith('EYEQ-')) { window.loadRecord(val); return; } }
+        window.runUniversalSearch();
+    };
+
+    window.runUniversalSearch = async function() {
+        const query = document.getElementById('universal_search').value.toLowerCase();
+        const resBox = document.getElementById('res_box');
+        if (!query || !db || !userId) { resBox.innerHTML = ''; return; }
+        try {
+            const snapshot = await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('patients').get();
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.name.toLowerCase().includes(query) || data.mrd.toLowerCase().includes(query) || (data.phone && data.phone.includes(query))) {
+                    html += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:10px; cursor:pointer;" onclick="window.loadRecord('${data.mrd}')">
+                        <strong>${data.name}</strong> (${data.mrd})<br><span style="color:#666;">${data.date} | Ph: ${data.phone}</span>
+                    </div>`;
+                }
+            });
+            resBox.innerHTML = html || '<div style="font-size:10px; padding:10px;">No results found.</div>';
+        } catch(e) { console.error(e); }
+    };
+
+    window.renderLibrary = async function() {
+        if (!db || !userId) return;
+        const cat = document.getElementById('lib_cat').value;
+        const display = document.getElementById('lib_display');
+        display.innerHTML = '<div style="padding:10px; text-align:center;">Loading...</div>';
+        try {
+            const snapshot = await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').where('category', '==', cat).get();
+            let items = []; snapshot.forEach(doc => items.push(doc.data()));
+            items.sort((a,b) => a.value.localeCompare(b.value));
+            let html = '';
+            items.forEach(item => {
+                html += `<div class="lib-item"><span>${item.value}</span><button onclick="window.deleteLibItem('${item.id}')" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button></div>`;
+            });
+            display.innerHTML = html || '<div style="padding:10px; text-align:center;">No items in this category.</div>';
+        } catch(e) { console.error(e); display.innerHTML = '<div style="padding:10px;">Error loading.</div>'; }
+    };
+
+    window.manualAddLib = async function() {
+        if (!db || !userId) { window.showToast("Cannot save while offline."); return; }
+        const cat = document.getElementById('lib_cat').value;
+        const input = document.getElementById('lib_input');
+        const val = input.value.trim().toUpperCase();
+        if (!val) return;
+        try {
+            const docId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').doc(docId).set({ id: docId, category: cat, value: val });
+            input.value = ''; window.showToast("Saved to library!");
+            window.renderLibrary(); window.updateDatalists();
+        } catch (e) { console.error(e); window.showToast("Error saving item."); }
+    };
+
+    window.deleteLibItem = async function(id) {
+        if (!db || !userId) return;
+        try {
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').doc(id).delete();
+            window.showToast("Item deleted."); window.renderLibrary(); window.updateDatalists();
+        } catch(e) { console.error(e); window.showToast("Error deleting item."); }
+    };
+
+    window.updateDatalists = async function() {
+        if (!db || !userId) return;
+        try {
+            const snapshot = await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('library').get();
+            const categories = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if(!categories[data.category]) categories[data.category] = [];
+                categories[data.category].push(data.value);
+            });
+            
+            // Populate the Consultant <select> to fix the android bug
+            const consBox = document.getElementById('consultant_box');
+            if(consBox) {
+                let currentVal = consBox.value;
+                consBox.innerHTML = '<option value="CHAYAN DEY KABIRAJ | CONSULTANT OPTOMETRIST | | | | | 7980931569 | 10:00 AM - 08:00 PM">CHAYAN DEY KABIRAJ</option>';
+                if(categories['dl_consultant']) {
+                    categories['dl_consultant'].sort().forEach(val => {
+                        let name = val.split('|')[0].trim();
+                        if(!name.includes("CHAYAN")) {
+                            let opt = document.createElement('option');
+                            opt.value = val;
+                            opt.textContent = name;
+                            consBox.appendChild(opt);
+                        }
+                    });
+                }
+                
+                let exists = Array.from(consBox.options).some(opt => opt.value === currentVal);
+                if(!exists && currentVal) {
+                    let opt = document.createElement('option');
+                    opt.value = currentVal;
+                    opt.textContent = currentVal.split('|')[0].trim();
+                    consBox.appendChild(opt);
+                }
+                consBox.value = currentVal;
+            }
+
+            // Populate remaining simple datalists
+            for (const cat in categories) {
+                if (cat !== 'dl_consultant') {
+                    const dl = document.getElementById(cat);
+                    if (dl) {
+                        dl.innerHTML = '';
+                        categories[cat].sort().forEach(val => {
+                            const opt = document.createElement('option'); opt.value = val; dl.appendChild(opt);
+                        });
+                    }
+                }
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    window.sendWhatsApp = function() {
+        const phone = document.getElementById('pt_phone').value;
+        const ptName = document.getElementById('pt_name').value.toUpperCase() || 'Patient';
+        const mrd = document.getElementById('mrd_no').value || '';
+        const dtNow = document.getElementById('dt_now').value || '';
+        const advice = document.getElementById('advice_text').value.toUpperCase() || '';
+        const fuDate = document.getElementById('fu_date_txt').value || '';
+
+        if (!phone) { window.showToast("Please enter a PATIENT PHONE number first."); return; }
+        
+        let waNumber = phone.replace(/\D/g, ''); 
+        if (waNumber.length === 10) waNumber = "91" + waNumber;
+
+        let medsText = "";
+        const rows = document.querySelectorAll('#rx_body tr');
+        rows.forEach((tr, index) => {
+            const selects = tr.querySelectorAll('select');
+            const inputs = tr.querySelectorAll('input');
+            const eye = selects[0]?.value.toUpperCase() || '';
+            const form = inputs[0]?.value.toUpperCase() || '';
+            const brand = inputs[1]?.value.toUpperCase() || '';
+            const freq = inputs[3]?.value.toUpperCase() || '';
+            const dur = inputs[4]?.value.toUpperCase() || '';
+            if (brand) { medsText += `> *${brand}* (${eye} - ${form})\n      ${freq} | ${dur}\n`; }
+        });
+
+        let msg = `*EYEQ EYE CARE*\n----------------------------------------\n`;
+        msg += `*Patient:* ${ptName}\n*Date:* ${dtNow.split(',')[0]}\n*MRD:* ${mrd}\n\n`;
+        if (medsText !== "") { msg += `*PRESCRIPTION:*\n${medsText}\n`; }
+        if (advice !== "") { msg += `*ADVICE / INSTRUCTIONS:*\n${advice}\n\n`; }
+        if (fuDate !== "") { msg += `*NEXT VISIT:* ${fuDate}\n\n`; }
+        msg += `----------------------------------------\n*Address:* Gobindapur-Bishalakshmitala, Singur, Hooghly-712223\n*Ph:* 7980931569 / 6297785968\n\n_This is a digital copy of your prescription._`;
+        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    window.loginToCloud = function() {
+        const email = document.getElementById('login_email').value.trim();
+        const pass = document.getElementById('login_pass').value;
+
+        if (!email || !pass) { 
+            alert("⚠️ Please enter both email and password."); 
+            return; 
+        }
+
+        auth.signInWithEmailAndPassword(email, pass).then((userCredential) => {
+            alert("✅ SUCCESS! Connected to Cloud.");
+        }).catch(err => {
+            alert("❌ FIREBASE BLOCKED LOGIN.\n\nReason: " + err.message);
+        });
+    };
+
+    window.checkAppSecurity = async function() {
+        const lockScreen = document.getElementById('lock-screen');
+        lockScreen.style.display = 'flex';
+        document.getElementById('lock-ui').innerHTML = '<h4>Checking Security...</h4>';
+        try {
+            const doc = await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('metadata').doc('security').get();
+            if (doc.exists && doc.data().pin) {
+                window.appSecurityPin = doc.data().pin;
+                window.renderLockUI('locked');
+            } else { window.renderLockUI('setup'); }
+        } catch (e) {
+            console.error(e); window.showToast("Offline: Bypassing Lock for now."); lockScreen.style.display = 'none';
+        }
+    };
+
+    window.renderLockUI = function(state) {
+        const ui = document.getElementById('lock-ui');
+        let html = `<h2 style="margin-top:0; font-family:'Playfair Display'; color:var(--royal-blue);">CLINIC SECURITY</h2>`;
+        if (state === 'setup') {
+            html += `<p style="font-size:10px; color:#64748b; text-transform:none;">Protect your patient records. Create a 4-digit PIN.</p>
+                <input type="password" id="sec_new_pin" class="lock-input pin-input" placeholder="0000" maxlength="4" inputmode="numeric">
+                <button class="lock-btn" onclick="window.setupPin()">SET SECURITY PIN</button>`;
+        } else if (state === 'locked') {
+            html += `<p style="font-size:10px; color:#64748b; text-transform:none;">App is locked. Enter PIN to continue.</p>
+                <input type="password" id="sec_pin_attempt" class="lock-input pin-input" placeholder="****" maxlength="4" inputmode="numeric">
+                <button class="lock-btn" onclick="window.unlockApp()">UNLOCK APP</button>
+                <button class="lock-link" onclick="window.renderLockUI('forgot')">Forgot PIN?</button>
+                <br><button class="lock-link" onclick="auth.signOut()" style="margin-top:15px; color:red;">Sign Out of Cloud</button>`;
+        } else if (state === 'forgot') {
+            html += `<p style="font-size:10px; color:#64748b; text-transform:none;">An OTP will be sent to the administrator:<br><b>${window.ADMIN_EMAIL}</b></p>
+                <button class="lock-btn" onclick="window.requestOtp()">SEND OTP</button>
+                <button class="lock-link" onclick="window.renderLockUI('locked')">Back to Unlock</button>`;
+        } else if (state === 'otp') {
+            html += `<p style="font-size:10px; color:#64748b; text-transform:none;">Enter the 6-digit OTP sent to your email.</p>
+                <input type="number" id="sec_otp_attempt" class="lock-input pin-input" placeholder="------" maxlength="6">
+                <button class="lock-btn" onclick="window.verifyOtp()">VERIFY OTP</button>
+                <button class="lock-link" onclick="window.renderLockUI('forgot')">Resend OTP</button>`;
+        } else if (state === 'reset') {
+            html += `<p style="font-size:10px; color:#64748b; text-transform:none;">Create a new 4-digit security PIN.</p>
+                <input type="password" id="sec_reset_pin" class="lock-input pin-input" placeholder="0000" maxlength="4" inputmode="numeric">
+                <button class="lock-btn" onclick="window.saveNewPin()">SAVE NEW PIN</button>`;
+        }
+        ui.innerHTML = html;
+    };
+
+    window.setupPin = async function() {
+        const pin = document.getElementById('sec_new_pin').value;
+        if (!/^\d{4}$/.test(pin)) { window.showToast("PIN must be exactly 4 digits."); return; }
+        try {
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('metadata').doc('security').set({ pin: pin });
+            window.appSecurityPin = pin; document.getElementById('lock-screen').style.display = 'none';
+            window.showToast("Security PIN Active.");
+        } catch(e) { window.showToast("Failed to save PIN."); }
+    };
+
+    window.unlockApp = function() {
+        const attempt = document.getElementById('sec_pin_attempt').value;
+        if (attempt === window.appSecurityPin) {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('sec_pin_attempt').value = '';
+            window.showToast("Unlocked successfully.");
+        } else {
+            window.showToast("Incorrect PIN.");
+            document.getElementById('sec_pin_attempt').value = '';
+        }
+    };
+
+    window.requestOtp = function() {
+        window.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        window.showToast("Sending OTP to Admin Email...");
+        emailjs.send("service_qm8b0dh", "template_bqxhosj", {
+            name: "SPECTU App", email: window.ADMIN_EMAIL, title: "Security OTP",
+            message: "Your Security OTP code is: " + window.currentOtp, otp_code: window.currentOtp
+        }, "POPZfu14AcQN3E-Ci").then(() => {
+            window.showToast(`OTP successfully sent to admin`); window.renderLockUI('otp');
+        }).catch((err) => {
+            console.error("EmailJS Error:", err); window.showToast("Failed to send OTP. Check console.");
+        });
+    };
+
+    window.verifyOtp = function() {
+        const attempt = document.getElementById('sec_otp_attempt').value;
+        if (attempt === window.currentOtp) {
+            window.currentOtp = null; window.renderLockUI('reset');
+        } else { window.showToast("Invalid OTP."); }
+    };
+
+    window.saveNewPin = async function() {
+        const pin = document.getElementById('sec_reset_pin').value;
+        if (!/^\d{4}$/.test(pin)) { window.showToast("PIN must be exactly 4 digits."); return; }
+        try {
+            await db.collection('artifacts').doc(dbFolder).collection('users').doc(userId).collection('metadata').doc('security').set({ pin: pin }, { merge: true });
+            window.appSecurityPin = pin; document.getElementById('lock-screen').style.display = 'none';
+            window.showToast("PIN reset successfully.");
+        } catch(e) { window.showToast("Failed to reset PIN."); }
+    };
+
+    function setupAppUI() {
+        const vaValues = ["", "6/5", "6/5P", "6/6", "6/6P", "6/9", "6/9P", "6/12", "6/12P", "6/18", "6/18P", "6/24", "6/24P", "6/36", "6/36P", "6/60", "6/60P", "5/60", "4/60", "3/60", "2/60", "1/60", "CF", "CF 1ft", "CF 2ft", "CF 3ft", "CF 4ft", "CF 5ft", "HM", "PL+", "PL-", "NPL"];
+        const nvValues = ["", "N6", "N8", "N10", "N12", "N18", "N24", "N36"];
+        let sphValues = ["", "PLANO"]; for(let i=20.00; i>=-20.00; i-=0.25) { if(i!==0) sphValues.push((i>0?"+":"")+i.toFixed(2)); }
+        let cylValues = ["", "DS"]; for(let i=8.00; i>=-8.00; i-=0.25) { if(i!==0) cylValues.push((i>0?"+":"")+i.toFixed(2)); }
+        let axValues = [""]; for(let i=5; i<=180; i+=5) { axValues.push(i.toString()); }
+        let naddValues = [""]; for(let i=0.50; i<=4.00; i+=0.25) { naddValues.push("+"+i.toFixed(2)); }
+
+        const freqValues = ["", "6 TIMES → 4 TIMES → 2 TIMES → 1 TIME DAILY", "4 TIMES → 3 TIMES → 2 TIMES → 1 TIME DAILY", "1 DROP 8 TIMES / DAY", "1 DROP 6 TIMES / DAY", "1 DROP 4 TIMES / DAY", "1 DROP 2 TIMES / DAY"];
+
+        function populateSelect(className, valuesArray) {
+            const selects = document.querySelectorAll("." + className);
+            selects.forEach(select => {
+                select.innerHTML = '';
+                valuesArray.forEach(val => {
+                    let opt = document.createElement('option'); opt.value = val; opt.textContent = val;
+                    select.appendChild(opt);
+                });
+            });
+        }
+        populateSelect("va_d", vaValues); populateSelect("sph_d", sphValues); populateSelect("cyl_d", cylValues);
+        populateSelect("ax_d", axValues); populateSelect("nv_d", nvValues); populateSelect("nadd_d", naddValues);
+
+        const freqDatalist = document.getElementById("dl_freq");
+        if(freqDatalist) {
+            freqValues.forEach(val => {
+                if(val) { let opt = document.createElement('option'); opt.value = val; freqDatalist.appendChild(opt); }
+            });
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupAppUI();
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBONGIZWBTQf0aHkLYdYNgcIZT7A7ppAtY",
+            authDomain: "eyeq-clinic-b4481.firebaseapp.com",
+            projectId: "eyeq-clinic-b4481",
+            storageBucket: "eyeq-clinic-b4481.firebasestorage.app",
+            messagingSenderId: "233464734968",
+            appId: "1:233464734968:web:dddaa38b7f0bf0271c070d"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('view-home').classList.remove('hidden');
+                
+                userId = user.uid;
+                updateOnlineStatus();
+                window.checkAppSecurity();
+                window.renderRecent();
+                window.updateDatalists();
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('view-home').classList.add('hidden');
+            }
+        });
+    });
+</script>
+</body>
+</html>
